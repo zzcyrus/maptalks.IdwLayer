@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>maptalks.IdwLayer demo</title>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.min.js"></script>
+    <script type="text/javascript" src="../dist/maptalks.IdwLayer.js"></script>
+    <script src="exampledata.js"></script>
+
+    <style>
+        html,
+        body {
+            margin: 0px;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        var map = new maptalks.Map("map", {
+            center: [175.475, -37.87],
+            zoom: 12,
+            attributionControl: {
+                'content': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            },
+            baseLayer: new maptalks.TileLayer('tile', {
+                urlTemplate: 'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+                subdomains: ['a', 'b', 'c', 'd']
+            })
+        });
+        var data = addressPoints.map(function (p) {
+            return [p[1], p[0], p[2]];
+        });
+        var idw = new maptalks.IdwLayer('idw', data, {
+            opacity: 0.3,
+            cellSize: 10,
+            exp: 2,
+            max: 1200
+        }).addTo(map);
+    </script>
+</body>
+
+</html>
