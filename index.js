@@ -1,6 +1,6 @@
 import * as maptalks from 'maptalks';
 
-! function () {
+! function() {
 
     function simpleidw(canvas) {
         if (!(this instanceof simpleidw)) return new simpleidw(canvas);
