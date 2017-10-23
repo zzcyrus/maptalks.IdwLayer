@@ -2,6 +2,8 @@
 
 A small maptalks plugin to generate an IDW interpolated map, based on [Leaflet.idw](https://github.com/JoranBeaufort/Leaflet.idw) by JoranBeaufort
 
+![](https://raw.githubusercontent.com/zzcyrus/readme_demo/master/img/maptalks.idwlayer.demo.png)
+
 ## Examples
 
 [Demo](http://kael.top/maptalks.IdwLayer/demo/demo.html)
