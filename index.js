@@ -1,137 +1,134 @@
 import * as maptalks from 'maptalks';
 
-! function() {
 
-    function simpleidw(canvas) {
-        if (!(this instanceof simpleidw)) return new simpleidw(canvas);
+function simpleidw(canvas) {
+    if (!(this instanceof simpleidw)) return new simpleidw(canvas);
 
-        this._canvas = canvas = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
+    this._canvas = canvas = typeof canvas === 'string' ? document.getElementById(canvas) : canvas;
 
-        this._ctx = canvas.getContext('2d');
-        this._width = canvas.width;
-        this._height = canvas.height;
+    this._ctx = canvas.getContext('2d');
+    this._width = canvas.width;
+    this._height = canvas.height;
 
-        this._max = 1;
+    this._max = 1;
+    this._data = [];
+}
+
+simpleidw.prototype = {
+
+    defaultCellSize: 25,
+
+    defaultGradient: {
+        0.0: '#000066',
+        0.1: 'blue',
+        0.2: 'cyan',
+        0.3: 'lime',
+        0.4: 'yellow',
+        0.5: 'orange',
+        0.6: 'red',
+        0.7: 'Maroon',
+        0.8: '#660066',
+        0.9: '#990099',
+        1.0: '#ff66ff'
+    },
+
+    data: function (data) {
+        this._data = data;
+        return this;
+    },
+
+    max: function (max) {
+        this._max = max;
+        return this;
+    },
+
+    add: function (point) {
+        this._data.push(point);
+        return this;
+    },
+
+    clear: function () {
         this._data = [];
-    }
+        return this;
+    },
 
-    simpleidw.prototype = {
+    cellSize: function (r) {
+        // create a grayscale blurred cell image that we'll use for drawing points
+        const cell = this._cell = document.createElement('canvas'),
+            ctx = cell.getContext('2d');
+        this._r = r;
 
-        defaultCellSize: 25,
+        cell.width = cell.height = r;
 
-        defaultGradient: {
-            0.0: '#000066',
-            0.1: 'blue',
-            0.2: 'cyan',
-            0.3: 'lime',
-            0.4: 'yellow',
-            0.5: 'orange',
-            0.6: 'red',
-            0.7: 'Maroon',
-            0.8: '#660066',
-            0.9: '#990099',
-            1.0: '#ff66ff'
-        },
+        ctx.beginPath();
+        ctx.rect(0, 0, r, r);
+        ctx.fill();
+        ctx.closePath();
 
-        data: function (data) {
-            this._data = data;
-            return this;
-        },
+        return this;
+    },
 
-        max: function (max) {
-            this._max = max;
-            return this;
-        },
+    resize: function () {
+        this._width = this._canvas.width;
+        this._height = this._canvas.height;
+    },
 
-        add: function (point) {
-            this._data.push(point);
-            return this;
-        },
+    gradient: function (grad) {
+        // create a 256x1 gradient that we'll use to turn a grayscale heatmap into a colored one
+        const canvas = document.createElement('canvas'),
+            ctx = canvas.getContext('2d'),
+            gradient = ctx.createLinearGradient(0, 0, 0, 256);
 
-        clear: function () {
-            this._data = [];
-            return this;
-        },
+        canvas.width = 1;
+        canvas.height = 256;
 
-        cellSize: function (r) {
-            // create a grayscale blurred cell image that we'll use for drawing points
-            const cell = this._cell = document.createElement('canvas'),
-                ctx = cell.getContext('2d');
-            this._r = r;
-
-            cell.width = cell.height = r;
-
-            ctx.beginPath();
-            ctx.rect(0, 0, r, r);
-            ctx.fill();
-            ctx.closePath();
-
-            return this;
-        },
-
-        resize: function () {
-            this._width = this._canvas.width;
-            this._height = this._canvas.height;
-        },
-
-        gradient: function (grad) {
-            // create a 256x1 gradient that we'll use to turn a grayscale heatmap into a colored one
-            const canvas = document.createElement('canvas'),
-                ctx = canvas.getContext('2d'),
-                gradient = ctx.createLinearGradient(0, 0, 0, 256);
-
-            canvas.width = 1;
-            canvas.height = 256;
-
-            for (const i in grad) {
-                gradient.addColorStop(+i, grad[i]);
-            }
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, 1, 256);
-
-            this._grad = ctx.getImageData(0, 0, 1, 256).data;
-
-            return this;
-        },
-
-        draw: function (opacity) {
-            if (!this._cell) this.cellSize(this.defaultCellSize);
-            if (!this._grad) this.gradient(this.defaultGradient);
-
-            const ctx = this._ctx;
-
-            ctx.clearRect(0, 0, this._width, this._height);
-
-            // draw a grayscale idwmap by putting a cell at each data point
-            for (let i = 0, len = this._data.length, p; i < len; i++) {
-                p = this._data[i];
-                ctx.globalAlpha = p[2] / this._max;
-                ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
-            }
-
-            // colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
-            const colored = ctx.getImageData(0, 0, this._width, this._height);
-            this._colorize(colored.data, this._grad, opacity * 5);
-
-            ctx.putImageData(colored, 0, 0);
-
-            return this;
-        },
-
-        _colorize: function (pixels, gradient, opacity) {
-            for (let i = 0, len = pixels.length, j; i < len; i += 4) {
-                j = pixels[i + 3] * 4;
-
-                pixels[i] = gradient[j];
-                pixels[i + 1] = gradient[j + 1];
-                pixels[i + 2] = gradient[j + 2];
-                pixels[i + 3] = opacity * 256;
-            }
+        for (const i in grad) {
+            gradient.addColorStop(+i, grad[i]);
         }
-    };
-    window.simpleidw = simpleidw;
-}();
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1, 256);
+
+        this._grad = ctx.getImageData(0, 0, 1, 256).data;
+
+        return this;
+    },
+
+    draw: function (opacity) {
+        if (!this._cell) this.cellSize(this.defaultCellSize);
+        if (!this._grad) this.gradient(this.defaultGradient);
+
+        const ctx = this._ctx;
+
+        ctx.clearRect(0, 0, this._width, this._height);
+
+        // draw a grayscale idwmap by putting a cell at each data point
+        for (let i = 0, len = this._data.length, p; i < len; i++) {
+            p = this._data[i];
+            ctx.globalAlpha = p[2] / this._max;
+            ctx.drawImage(this._cell, p[0] - this._r, p[1] - this._r);
+        }
+
+        // colorize the heatmap, using opacity value of each pixel to get the right color from our gradient
+        const colored = ctx.getImageData(0, 0, this._width, this._height);
+        this._colorize(colored.data, this._grad, opacity * 5);
+
+        ctx.putImageData(colored, 0, 0);
+
+        return this;
+    },
+
+    _colorize: function (pixels, gradient, opacity) {
+        for (let i = 0, len = pixels.length, j; i < len; i += 4) {
+            j = pixels[i + 3] * 4;
+
+            pixels[i] = gradient[j];
+            pixels[i + 1] = gradient[j + 1];
+            pixels[i + 2] = gradient[j + 2];
+            pixels[i + 3] = opacity * 256;
+        }
+    }
+};
 
 export class IdwLayer extends maptalks.Layer {
 
@@ -276,7 +273,7 @@ IdwLayer.registerRenderer('canvas', class extends maptalks.renderer.CanvasRender
         }
 
         if (!this._idw) {
-            this._idw = window.simpleidw(this.canvas);
+            this._idw = simpleidw(this.canvas);
         }
         this._updateOptions();
 
@@ -302,6 +299,9 @@ IdwLayer.registerRenderer('canvas', class extends maptalks.renderer.CanvasRender
         }
         if (this.layer.options.max) {
             this._idw.max(this.layer.options.max);
+        }
+        if (!this.layer.options.hasOwnProperty('opacity')) {
+            this.layer.options.opacity = 0.3;
         }
     }
 
